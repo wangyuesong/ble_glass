@@ -51,5 +51,13 @@
     <string name="menu_disconnect">Disconnect</string>
     <string name="menu_scan">Scan</string>
     <string name="menu_stop">Stop</string>
-
+    <string-array name="direction_array">
+        <item>Dark</item>
+        <item>Light</item>
+    </string-array>
+    <string-array name="voltage_array">
+        <item>2.5V</item>
+        <item>2V</item>
+        <item>1.5V</item>
+    </string-array>
 </resources>

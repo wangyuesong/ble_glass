@@ -31,7 +31,6 @@
 
 package com.microchip.rn4020die;
 
-import java.util.List;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -47,14 +46,20 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.NumberPicker;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.List;
 import java.util.UUID;
+import java.util.HashMap;
 
 /**
  * This Activity receives a Bluetooth device address provides the user interface to connect, display data, and display GATT services
@@ -90,7 +95,23 @@ public class DeviceControlActivity extends Activity {
     
     private Die redDie;                                                                 //Die object for rolling a number from 1 to 6
 
-    // ----------------------------------------------------------------------------------------------------------------
+
+    private Spinner directionSpinner;
+    private HashMap<String, String> directionMap;
+
+    private Spinner voltageSpinner;
+    private HashMap<String, String> voltageMap;
+    private Button sendButton;
+    private Button testDarkButton;
+    private Button testLightButton;
+
+    private NumberPicker lengthPicker;
+
+    private String direction;
+    private String voltage;
+    private int length = 1;
+    // -------------------------------
+    // ---------------------------------------------------------------------------------
     // Activity launched
     // Invoked by Intent in onListItemClick method in DeviceScanActivity
     @Override
@@ -107,12 +128,48 @@ public class DeviceControlActivity extends Activity {
         mConnectionState = (TextView) findViewById(R.id.connectionState);               //TextView that will display the connection state
 
         redDie = new Die();                                                             //Create a new Die
-        redDieText = (TextView) findViewById(R.id.textRedDie);                          //TextView that will display the roll of the die
-        redDieText.setLayerType(View.LAYER_TYPE_SOFTWARE, null);                        //Hardware acceleration does not have cache large enough for huge fonts
-        redDieText.setOnClickListener(redDieTextClickListener);                         //Set onClickListener for when text is pressed
-        redDieButton = (Button) findViewById(R.id.buttonRedDie);                        //Button that will roll the die when clicked
-        redDieButton.setOnClickListener(redDieButtonClickListener);                     //Set onClickListener for when button is pressed
-        
+//        redDieText = (TextView) findViewById(R.id.textRedDie);                          //TextView that will display the roll of the die
+//        redDieText.setLayerType(View.LAYER_TYPE_SOFTWARE, null);                        //Hardware acceleration does not have cache large enough for huge fonts
+//        redDieText.setOnClickListener(redDieTextClickListener);                         //Set onClickListener for when text is pressed
+//        redDieButton = (Button) findViewById(R.id.buttonRedDie);                        //Button that will roll the die when clicked
+//        redDieButton.setOnClickListener(redDieButtonClickListener);                     //Set onClickListener for when button is pressed
+        sendButton = (Button)findViewById(R.id.send_button);
+        sendButton.setOnClickListener(sendButtonClickListener);
+        testDarkButton = (Button)findViewById(R.id.test_dark);
+        testDarkButton.setOnClickListener(testDarkButtonClickListener);
+        testLightButton = (Button)findViewById(R.id.test_light);
+        testLightButton.setOnClickListener(testLightButtonClickListener);
+
+        directionSpinner = (Spinner) findViewById(R.id.direction_spinner);
+        ArrayAdapter<CharSequence> directionSpinnerAdapter = ArrayAdapter.createFromResource(this,
+                R.array.direction_array, android.R.layout.simple_spinner_item);
+        directionSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        directionSpinner.setAdapter(directionSpinnerAdapter);
+        directionSpinner.setOnItemSelectedListener(directionSpinnerOnClickListener);
+
+        voltageSpinner = (Spinner) findViewById(R.id.voltage_spinner);
+        ArrayAdapter<CharSequence> voltageSpinnerAdapter = ArrayAdapter.createFromResource(this,
+                R.array.voltage_array, android.R.layout.simple_spinner_item);
+        voltageSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        voltageSpinner.setAdapter(voltageSpinnerAdapter);
+        voltageSpinner.setOnItemSelectedListener(voltageSpinnerOnClickListener);
+
+        lengthPicker = (NumberPicker) findViewById(R.id.length_picker);
+        lengthPicker.setOnValueChangedListener(lengthPickerOnValueChangedListener);
+        lengthPicker.setMinValue(1);
+        lengthPicker.setMaxValue(15);
+
+        directionMap = new HashMap<String, String>();
+        voltageMap = new HashMap<String, String>();
+        directionMap.put("Dark","C");
+        directionMap.put("Light","F");
+
+        voltageMap.put("2.5V","1");
+        voltageMap.put("2V","2");
+        voltageMap.put("1.5V","3");
+
+
+
         incomingMessage = new String();                                                 //Create new string to hold incoming message data
         this.getActionBar().setTitle(mDeviceName);                                      //Set the title of the ActionBar to the name of the BLE device 
         this.getActionBar().setDisplayHomeAsUpEnabled(true);                            //Make home icon clickable with < symbol on the left 
@@ -216,7 +273,7 @@ public class DeviceControlActivity extends Activity {
             @Override
             public void run() {
                 mConnectionState.setText(resourceId);                                   //Update text to say "Connected" or "Disconnected"
-                redDieText.setText(null);                                               //Reset die text to blank when connection changes
+//                redDieText.setText(null);                                               //Reset die text to blank when connection changes
             }
         });
     }
@@ -227,13 +284,42 @@ public class DeviceControlActivity extends Activity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mDataMDLP.setValue("=>R" + redDie.Roll() + "\r\n");                     //Set value of MLDP characteristic to send die roll information
+                mDataMDLP.setValue("=>R" + redDie.Roll()+ "\r\n");                     //Set value of MLDP characteristic to send die roll information
                 writeCharacteristic(mDataMDLP);                                         //Call method to write the characteristic
-                redDieText.setText(Byte.toString(redDie.View()));                       //Set the die text to show the last die roll
-                int height = redDieText.getHeight();                                    //Get the available height for the text object
-                redDieText.setTextSize(TypedValue.COMPLEX_UNIT_PX, (height * 4 / 5));   //Set the size of the text to take up 80% available space
             }
         });
+    }
+    private void sendVoltageAndDirection(){
+        runOnUiThread(new Runnable() {
+//            @Override
+            public void run() {
+
+                mDataMDLP.setValue(getByteRepresentation(direction + voltage));                     //Set value of MLDP characteristic to send die roll information
+                writeCharacteristic(mDataMDLP);                                         //Call method to write the characteristic
+            }
+        });
+    };
+    private void sendLength(){
+        runOnUiThread(new Runnable() {
+            //            @Override
+            public void run() {
+                String prefix = "A";
+                if(direction.equals("F")){
+                    prefix = "D";
+                }
+                mDataMDLP.setValue(getByteRepresentation(prefix + Integer.toHexString(length)));                     //Set value of MLDP characteristic to send die roll information
+                writeCharacteristic(mDataMDLP);                                         //Call method to write the characteristic
+            }
+        });
+    };
+
+    private byte[] getByteRepresentation(String s){
+        byte[] bytes = new byte[1];
+        int firstByte = Character.digit(s.charAt(0), 16);
+        int secondByte = Character.digit(s.charAt(1),16);
+        int result = (firstByte << 4) | secondByte;
+        bytes[0] = (byte)(result & 0xff);
+        return bytes;
     }
     
     // ----------------------------------------------------------------------------------------------------------------
@@ -275,6 +361,75 @@ public class DeviceControlActivity extends Activity {
             updateDieState();                                                           //Update the state of the die with a new roll and send over BLE
         }
     };
+
+    private final Button.OnClickListener sendButtonClickListener = new Button.OnClickListener() {
+
+        public void onClick(View view) {                                                //Button was clicked
+//            updateDieState();                                                           //Update the state of the die with a new roll and send over BLE
+            sendLength();
+        }
+    };
+    private final Button.OnClickListener testLightButtonClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    if(mDataMDLP != null) {
+                        mDataMDLP.setValue(getByteRepresentation("B1"));                     //Set value of MLDP characteristic to send die roll information
+                        writeCharacteristic(mDataMDLP);
+                    }//Call method to write the characteristic
+                }
+            });
+        }
+    };
+
+    private final Button.OnClickListener testDarkButtonClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if(mDataMDLP != null) {
+                mDataMDLP.setValue(getByteRepresentation("B2"));                     //Set value of MLDP characteristic to send die roll information
+                writeCharacteristic(mDataMDLP);
+            }//Call method to write the characteristic
+        }
+    };
+
+    private final NumberPicker.OnValueChangeListener lengthPickerOnValueChangedListener = new NumberPicker.OnValueChangeListener() {
+        @Override
+        public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+            length = newVal;
+        }
+    };
+
+
+    private final Spinner.OnItemSelectedListener directionSpinnerOnClickListener = new AdapterView.OnItemSelectedListener() {
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            String selectedValue = parent.getItemAtPosition(position).toString();
+            direction = directionMap.get(selectedValue);
+            if(mDataMDLP != null)
+                sendVoltageAndDirection();
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+
+        }
+    };
+    private final Spinner.OnItemSelectedListener voltageSpinnerOnClickListener = new AdapterView.OnItemSelectedListener() {
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            String selectedValue = parent.getItemAtPosition(position).toString();
+            voltage = voltageMap.get(selectedValue);
+            if(mDataMDLP != null)
+                sendVoltageAndDirection();
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+
+        }
+    };
+
 
     // ----------------------------------------------------------------------------------------------------------------
     // Iterate through the supported GATT Services/Characteristics to see if the MLDP srevice is supported

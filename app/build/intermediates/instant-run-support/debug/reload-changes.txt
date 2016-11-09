@@ -1,2 +1,3 @@
-CHANGED,/Users/yuesongwang/Desktop/LegoGame/RN4020 Die/app/build/intermediates/transforms/instantRun/debug/folders/4000/5/enhanced/com/microchip/rn4020die/DeviceControlActivity$override.class
+CHANGED,/Users/yuesongwang/Desktop/LegoGame/RN4020 Die/app/build/intermediates/transforms/instantRun/debug/folders/4000/5/enhanced/com/microchip/rn4020die/DeviceControlActivity$8$1$override.class
+CHANGED,/Users/yuesongwang/Desktop/LegoGame/RN4020 Die/app/build/intermediates/transforms/instantRun/debug/folders/4000/5/enhanced/com/microchip/rn4020die/DeviceControlActivity$9$override.class
 CHANGED,/Users/yuesongwang/Desktop/LegoGame/RN4020 Die/app/build/intermediates/transforms/instantRun/debug/folders/4000/5/enhanced/com/android/tools/fd/runtime/AppPatchesLoaderImpl.class

@@ -75,28 +75,80 @@
 
     <!-- Separator line -->
 
-    <View
-        android:id="@+id/separator"
-        android:layout_width="fill_parent"
-        android:layout_height="0.2dp"
-        android:background="@android:color/darker_gray"
-        android:visibility="visible" />
+    <!--<View-->
+        <!--android:id="@+id/separator"-->
+        <!--android:layout_width="fill_parent"-->
+        <!--android:layout_height="0.2dp"-->
+        <!--android:background="@android:color/darker_gray"-->
+        <!--android:visibility="visible" />-->
 
-    <!-- Big red number -->
+    <!--&lt;!&ndash; Big red number &ndash;&gt;-->
+    <!--<TextView-->
+        <!--android:id="@+id/textRedDie"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="0dip"-->
+        <!--android:gravity="center"-->
+        <!--android:textSize="100sp"-->
+        <!--android:layout_weight="1"-->
+        <!--android:textColor="@color/red" />-->
+
+    <!--&lt;!&ndash; Button to roll die &ndash;&gt;-->
+    <!--<Button-->
+        <!--android:id="@+id/buttonRedDie"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="@string/roll_red_die" />-->
     <TextView
-        android:id="@+id/textRedDie"
-        android:layout_width="match_parent"
-        android:layout_height="0dip"
-        android:gravity="center"
-        android:textSize="100sp"
-        android:layout_weight="1"
-        android:textColor="@color/red" />
-
-    <!-- Button to roll die -->
-    <Button
-        android:id="@+id/buttonRedDie"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/roll_red_die" />
+        android:text="Voltage"
+        android:textSize="18sp" />
+
+    <Spinner
+        android:id="@+id/voltage_spinner"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Direction"
+        android:textSize="18sp" />
+
+    <Spinner
+        android:id="@+id/direction_spinner"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Length"
+        android:textSize="18sp" />
+
+    <NumberPicker
+        android:id="@+id/length_picker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"  />
+
+    <Button
+        android:id="@+id/send_button"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:text="send" />
+
+    <Button
+        android:id="@+id/test_dark"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:text="Test Dark" />
+
+    <Button
+        android:id="@+id/test_light"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:text="Test Light" />
 
 </LinearLayout>
