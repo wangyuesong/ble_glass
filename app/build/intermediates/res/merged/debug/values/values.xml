@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="direction_array">
-        <item>Dark</item>
-        <item>Light</item>
+        <item>Light->Dark</item>
+        <item>Dark->Light</item>
     </string-array>
     <string-array name="voltage_array">
         <item>2.5V</item>
@@ -166,9 +166,11 @@
     <color name="teal">#008080</color>
     <color name="white">#FFFFFF</color>
     <color name="yellow">#FFFF00</color>
-    <string name="app_name">RN4020 Die</string>
+    <string name="app_name">Smart Glass Controller</string>
     <string name="ble_not_supported">BLE is not supported</string>
     <string name="bluetooth_not_supported">Bluetooth not supported.</string>
+    <string name="command_finished">Command Finished</string>
+    <string name="command_sent_to_glass">Command sent to glass</string>
     <string name="connected">Connected</string>
     <string name="disconnected">Disconnected</string>
     <string name="label_address">Address: </string>

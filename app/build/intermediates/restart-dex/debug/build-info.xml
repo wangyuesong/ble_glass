@@ -4,30 +4,35 @@
     api-level="23"
     density="xxxhdpi"
     format="7"
-    timestamp="25161952818286"
+    timestamp="70259786173801"
     token="-3490865946451607467" >
 
     <task
         name="javac"
-        duration="92" />
+        duration="222" />
     <task
         name="instant-run-dex"
         duration="0" />
     <task
         name="instant-run-transform"
-        duration="5" />
+        duration="88" />
     <task
         name="verifier"
-        duration="1" />
+        duration="18" />
 
     <artifact
-        location="/Users/yuesongwang/Desktop/LegoGame/RN4020 Die/app/build/outputs/apk/app-debug.apk"
-        type="MAIN" />
+        location="/Users/yuesongwang/Desktop/LegoGame/RN4020 Die/app/build/intermediates/transforms/dex/debug/folders/1000/5/slice_6/classes.dex"
+        type="DEX" />
 
-    <build timestamp="25161952818286" >
+    <build timestamp="69017449807929" >
         <artifact
             location="/Users/yuesongwang/Desktop/LegoGame/RN4020 Die/app/build/outputs/apk/app-debug.apk"
             type="MAIN" />
+    </build>
+    <build timestamp="70259786173801" >
+        <artifact
+            location="/Users/yuesongwang/Desktop/LegoGame/RN4020 Die/app/build/intermediates/transforms/dex/debug/folders/1000/5/slice_6/classes.dex"
+            type="DEX" />
     </build>
 
 </instant-run>

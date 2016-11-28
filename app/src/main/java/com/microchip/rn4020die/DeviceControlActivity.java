@@ -52,7 +52,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.NumberPicker;
+import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -78,21 +78,23 @@ public class DeviceControlActivity extends Activity {
 //    private static final String MLDP_PRIVATE_SERVICE = "00035b03-58e6-07dd-021a-08123a000300"; //Private service for Microchip MLDP
 //    private static final String MLDP_DATA_PRIVATE_CHAR = "00035b03-58e6-07dd-021a-08123a000301"; //Characteristic for MLDP Data, properties - notify, write
     private static final String MLDP_CONTROL_PRIVATE_CHAR = "00035b03-58e6-07dd-021a-08123a0003ff"; //Characteristic for MLDP Control, properties - read, write
+    //Get this by inspecting the characteric_value on phone
     private static final String CHARACTERISTIC_NOTIFICATION_CONFIG = "00002902-0000-1000-8000-00805f9b34fb";	//Special UUID for descriptor needed to enable notifications
 
     private BluetoothAdapter mBluetoothAdapter;                                         //BluetoothAdapter controls the Bluetooth radio in the phone
     private BluetoothGatt mBluetoothGatt;                                               //BluetoothGatt controls the Bluetooth communication link
     private BluetoothGattCharacteristic mDataMDLP, mControlMLDP;                        //The BLE characteristic used for MLDP data transfers
+
     private Handler mHandler;                                                           //Handler used to send die roll after a time delay
-    
+
     private TextView mConnectionState, redDieText;                                      //TextViews to show connection state and die roll number on the display
     private Button redDieButton;                                                        //Button to initiate a roll of the die
-    
+
     private String mDeviceName, mDeviceAddress;                                         //Strings for the Bluetooth device name and MAC address
     private String incomingMessage;                                                     //String to hold the incoming message from the MLDP characteristic
     private boolean mConnected = false;                                                 //Indicator of an active Bluetooth connection
     private boolean writeComplete = false;                                              //Indicator that the characteristic write has completed (for reference - not used)
-    
+
     private Die redDie;                                                                 //Die object for rolling a number from 1 to 6
 
 
@@ -105,11 +107,15 @@ public class DeviceControlActivity extends Activity {
     private Button testDarkButton;
     private Button testLightButton;
 
-    private NumberPicker lengthPicker;
+    private TextView lengthText;
+    private SeekBar lengthPicker;
+
 
     private String direction;
+    UIAdapter mUIUpdater;
     private String voltage;
     private int length = 1;
+    boolean remoteReady = false;
     // -------------------------------
     // ---------------------------------------------------------------------------------
     // Activity launched
@@ -154,15 +160,17 @@ public class DeviceControlActivity extends Activity {
         voltageSpinner.setAdapter(voltageSpinnerAdapter);
         voltageSpinner.setOnItemSelectedListener(voltageSpinnerOnClickListener);
 
-        lengthPicker = (NumberPicker) findViewById(R.id.length_picker);
-        lengthPicker.setOnValueChangedListener(lengthPickerOnValueChangedListener);
-        lengthPicker.setMinValue(1);
-        lengthPicker.setMaxValue(15);
+        lengthPicker = (SeekBar) findViewById(R.id.length_picker);
+        lengthPicker.setOnSeekBarChangeListener(lengthPickerOnValueChangedListener);
+        lengthPicker.setMax(15);
+        lengthPicker.setProgress(8);
+        lengthText = (TextView)findViewById(R.id.length_text);
+        lengthText.setText("Length:" + length + " second");
 
         directionMap = new HashMap<String, String>();
         voltageMap = new HashMap<String, String>();
-        directionMap.put("Dark","C");
-        directionMap.put("Light","F");
+        directionMap.put("Light->Dark","C");
+        directionMap.put("Dark->Light","F");
 
         voltageMap.put("2.5V","1");
         voltageMap.put("2V","2");
@@ -180,6 +188,28 @@ public class DeviceControlActivity extends Activity {
             Toast.makeText(this, R.string.bluetooth_not_supported, Toast.LENGTH_SHORT).show(); //Message that Bluetooth is not supported
             finish();                                                                   //End the activity
         }
+
+
+        mUIUpdater  = new UIAdapter(new Runnable(){
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(!remoteReady) {
+                            disableAll();
+                            if(mDataMDLP != null) {
+                                mDataMDLP.setValue(new byte[]{(byte)66});                     //Set value of MLDP characteristic to send die roll information
+                                writeCharacteristic(mDataMDLP);
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        mUIUpdater.startUpdates();
+
     }
 
     // ----------------------------------------------------------------------------------------------------------------
@@ -236,7 +266,7 @@ public class DeviceControlActivity extends Activity {
             menu.findItem(R.id.menu_connect).setVisible(false);                         // then dont show disconnect option
             menu.findItem(R.id.menu_disconnect).setVisible(true);                       // and do show connect option
         }
-        else {                                                                          //If not connected    
+        else {                                                                          //If not connected
             menu.findItem(R.id.menu_connect).setVisible(true);                          // then show connect option
             menu.findItem(R.id.menu_disconnect).setVisible(false);                      // and don't show disconnect option
         }
@@ -312,7 +342,8 @@ public class DeviceControlActivity extends Activity {
             }
         });
     };
-
+    // Input String version of two Hex num, e.g 11
+    // One char is a byte. We only need each byte's first 4 bit(enough for 11 ~ ff), then combine them to one byte and send it out.
     private byte[] getByteRepresentation(String s){
         byte[] bytes = new byte[1];
         int firstByte = Character.digit(s.charAt(0), 16);
@@ -321,7 +352,7 @@ public class DeviceControlActivity extends Activity {
         bytes[0] = (byte)(result & 0xff);
         return bytes;
     }
-    
+
     // ----------------------------------------------------------------------------------------------------------------
     // Look for message with switch pressed indicator "->S1\n\r"
     private void processIncomingPacket(String data) {
@@ -393,11 +424,19 @@ public class DeviceControlActivity extends Activity {
         }
     };
 
-    private final NumberPicker.OnValueChangeListener lengthPickerOnValueChangedListener = new NumberPicker.OnValueChangeListener() {
-        @Override
-        public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-            length = newVal;
+    private final SeekBar.OnSeekBarChangeListener lengthPickerOnValueChangedListener = new SeekBar.OnSeekBarChangeListener(){
+
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
+            length = progress;
         }
+        public void onStartTrackingTouch(SeekBar seekBar) {
+        }
+        public void onStopTrackingTouch(SeekBar seekBar) {
+            lengthText.setText("Length:" + length + " second");
+            Toast.makeText(DeviceControlActivity.this,"Set length to : "+ length + " second",
+                    Toast.LENGTH_SHORT).show();
+        }
+
     };
 
 
@@ -450,9 +489,9 @@ public class DeviceControlActivity extends Activity {
                     if (uuid.equals(MLDP_DATA_PRIVATE_CHAR)) {                          //See if it matches the UUID of the MLDP data characteristic
                         mDataMDLP = gattCharacteristic;                                 //If so then save the reference to the characteristic 
                         Log.d(TAG, "Found MLDP data characteristics");
-                    } 
+                    }
                     else if (uuid.equals(MLDP_CONTROL_PRIVATE_CHAR)) {                  //See if UUID matches the UUID of the MLDP control characteristic
-                        mControlMLDP = gattCharacteristic;                              //If so then save the reference to the characteristic 
+                        mControlMLDP = gattCharacteristic;                              //If so then save the reference to the characteristic
                         Log.d(TAG, "Found MLDP control characteristics");
                     }
                     final int characteristicProperties = gattCharacteristic.getProperties(); //Get the properties of the characteristic
@@ -489,6 +528,7 @@ public class DeviceControlActivity extends Activity {
                 updateDieState();                                                       //Update the state of the die with a new roll and send over BLE
             }
         }, 200);                                                                        //Do it after 200ms delay to give the RN4020 time to configure the characteristic
+
     }
 
     // ----------------------------------------------------------------------------------------------------------------
@@ -504,12 +544,13 @@ public class DeviceControlActivity extends Activity {
                 updateConnectionState(R.string.connected);                              //Update the display to say "Connected"
                 invalidateOptionsMenu();                                                //Force the Options menu to be regenerated to show the disconnect option
                 mBluetoothGatt.discoverServices();                                      // Attempt to discover services after successful connection.
-            } 
+            }
             else if (newState == BluetoothProfile.STATE_DISCONNECTED) {                 //See if we are not connected
                 Log.i(TAG, "Disconnected from GATT server.");
                 mConnected = false;                                                     //Record the new connection state
                 updateConnectionState(R.string.disconnected);                           //Update the display to say "Disconnected"
                 invalidateOptionsMenu();                                                //Force the Options menu to be regenerated to show the connect option
+                remoteReady = false;
             }
         }
 
@@ -517,7 +558,7 @@ public class DeviceControlActivity extends Activity {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {              //Service discovery complete
             if (status == BluetoothGatt.GATT_SUCCESS && mBluetoothGatt != null) {       //See if the service discovery was successful
                 findMldpGattService(mBluetoothGatt.getServices());                      //Get the list of services and call method to look for MLDP service
-            } 
+            }
             else {                                                                      //Service discovery was not successful
                 Log.w(TAG, "onServicesDiscovered received: " + status);
             }
@@ -542,17 +583,40 @@ public class DeviceControlActivity extends Activity {
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) { //Indication or notification was received
-            String dataValue = characteristic.getStringValue(0);                        //Get the value of the characteristic
-            processIncomingPacket(dataValue);                                           //Process the data that was received
+            byte[] bytesValue = characteristic.getValue();
+//            String dataValue = characteristic.getStringValue(0);                        //Get the value of the characteristic
+//            processIncomingPacket(dataValue);                                           //Process the data that was received
+            int a = (int)bytesValue[0];
+            if(a == ProtocolConstants.COMMAND_RECEIVED){
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(DeviceControlActivity.this, R.string.command_sent_to_glass, Toast.LENGTH_LONG).show();
+                        disableAll();
+                    }
+                });
+            }
+            else if(a == ProtocolConstants.COMMAND_FINISHED){
+                //Remote ready, enable everything
+                remoteReady = true;
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(DeviceControlActivity.this, R.string.command_finished, Toast.LENGTH_SHORT).show();
+                        enableAll();
+                    }
+                });
+            }
         }
     };
+
 
 
     // ----------------------------------------------------------------------------------------------------------------
     // Request a read of a given BluetoothGattCharacteristic. The Read result is reported asynchronously through the
     // BluetoothGattCallback onCharacteristicRead callback method.
     // For information only. This application uses Indication to receive updated characteristic data, not Read
-    
+
     private void readCharacteristic(BluetoothGattCharacteristic characteristic) {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {                      //Check that we have access to a Bluetooth radio
             Log.w(TAG, "BluetoothAdapter not initialized");
@@ -576,10 +640,28 @@ public class DeviceControlActivity extends Activity {
 
         if (mBluetoothGatt.writeCharacteristic(characteristic)) {                       //Request the BluetoothGatt to do the Write
             Log.d(TAG, "writeCharacteristic successful");                               //The request was accepted, this does not mean the write completed
-        } 
+        }
         else {
             Log.d(TAG, "writeCharacteristic failed");                                   //Write request was not accepted by the BluetoothGatt
         }
+    }
+
+    private void disableAll(){
+        sendButton.setEnabled(false);
+        testLightButton.setEnabled(false);
+        testDarkButton.setEnabled(false);
+        voltageSpinner.setEnabled(false);
+        directionSpinner.setEnabled(false);
+        lengthPicker.setEnabled(false);
+    }
+
+    private void enableAll(){
+        sendButton.setEnabled(true);
+        testLightButton.setEnabled(true);
+        testDarkButton.setEnabled(true);
+        voltageSpinner.setEnabled(true);
+        directionSpinner.setEnabled(true);
+        lengthPicker.setEnabled(true);
     }
 
 }

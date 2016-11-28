@@ -31,9 +31,11 @@
 -->
 
 <resources>
-    <string name="app_name">RN4020 Die</string>
+    <string name="app_name">Smart Glass Controller</string>
     <string name="ble_not_supported">BLE is not supported</string>
     <string name="bluetooth_not_supported">Bluetooth not supported.</string>
+    <string name="command_sent_to_glass">Command sent to glass</string>
+    <string name="command_finished">Command Finished</string>
     <string name="mldp_not_supported">MLDP is not supported</string>
     <string name="label_address">Address: </string>
     <string name="label_state">State: </string>
@@ -52,8 +54,8 @@
     <string name="menu_scan">Scan</string>
     <string name="menu_stop">Stop</string>
     <string-array name="direction_array">
-        <item>Dark</item>
-        <item>Light</item>
+        <item>Light->Dark</item>
+        <item>Dark->Light</item>
     </string-array>
     <string-array name="voltage_array">
         <item>2.5V</item>

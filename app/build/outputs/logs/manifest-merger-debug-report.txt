@@ -17,7 +17,6 @@ ADDED from /Users/yuesongwang/Desktop/LegoGame/RN4020 Die/app/src/main/AndroidMa
 		ADDED from /Users/yuesongwang/Desktop/LegoGame/RN4020 Die/app/src/main/AndroidManifest.xml:2:11-69
 uses-sdk
 ADDED from /Users/yuesongwang/Desktop/LegoGame/RN4020 Die/app/src/main/AndroidManifest.xml:7:5-9:41
-MERGED from [com.android.support:multidex:1.0.1] /Users/yuesongwang/Desktop/LegoGame/RN4020 Die/app/build/intermediates/exploded-aar/com.android.support/multidex/1.0.1/AndroidManifest.xml:18:5-42
 	android:targetSdkVersion
 		ADDED from /Users/yuesongwang/Desktop/LegoGame/RN4020 Die/app/src/main/AndroidManifest.xml:9:9-38
 		INJECTED from /Users/yuesongwang/Desktop/LegoGame/RN4020 Die/app/src/main/AndroidManifest.xml
@@ -47,7 +46,7 @@ ADDED from /Users/yuesongwang/Desktop/LegoGame/RN4020 Die/app/src/main/AndroidMa
 	android:allowBackup
 		ADDED from /Users/yuesongwang/Desktop/LegoGame/RN4020 Die/app/src/main/AndroidManifest.xml:17:9-35
 	android:icon
-		ADDED from /Users/yuesongwang/Desktop/LegoGame/RN4020 Die/app/src/main/AndroidManifest.xml:18:9-41
+		ADDED from /Users/yuesongwang/Desktop/LegoGame/RN4020 Die/app/src/main/AndroidManifest.xml:18:9-43
 	android:theme
 		ADDED from /Users/yuesongwang/Desktop/LegoGame/RN4020 Die/app/src/main/AndroidManifest.xml:20:9-40
 activity#com.microchip.rn4020die.DeviceScanActivity
