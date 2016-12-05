@@ -180,22 +180,23 @@ public final class R {
         public static final int red_die=0x7f020000;
     }
     public static final class id {
-        public static final int connectionState=0x7f0b0001;
+        public static final int connectionState=0x7f0b0002;
         public static final int deviceAddress=0x7f0b0000;
-        public static final int device_address=0x7f0b000a;
-        public static final int device_name=0x7f0b0009;
-        public static final int direction_spinner=0x7f0b0002;
-        public static final int length_picker=0x7f0b0005;
-        public static final int length_text=0x7f0b0004;
-        public static final int menu_connect=0x7f0b000c;
-        public static final int menu_disconnect=0x7f0b000d;
-        public static final int menu_refresh=0x7f0b000b;
-        public static final int menu_scan=0x7f0b000e;
-        public static final int menu_stop=0x7f0b000f;
-        public static final int send_button=0x7f0b0006;
-        public static final int test_dark=0x7f0b0007;
-        public static final int test_light=0x7f0b0008;
-        public static final int voltage_spinner=0x7f0b0003;
+        public static final int device_address=0x7f0b000b;
+        public static final int device_name=0x7f0b000a;
+        public static final int direction_spinner=0x7f0b0003;
+        public static final int enable=0x7f0b0001;
+        public static final int length_picker=0x7f0b0006;
+        public static final int length_text=0x7f0b0005;
+        public static final int menu_connect=0x7f0b000d;
+        public static final int menu_disconnect=0x7f0b000e;
+        public static final int menu_refresh=0x7f0b000c;
+        public static final int menu_scan=0x7f0b000f;
+        public static final int menu_stop=0x7f0b0010;
+        public static final int send_button=0x7f0b0007;
+        public static final int test_dark=0x7f0b0008;
+        public static final int test_light=0x7f0b0009;
+        public static final int voltage_spinner=0x7f0b0004;
     }
     public static final class layout {
         public static final int die_screen=0x7f040000;

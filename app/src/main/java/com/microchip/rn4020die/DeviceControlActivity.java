@@ -106,6 +106,7 @@ public class DeviceControlActivity extends Activity {
     private Button sendButton;
     private Button testDarkButton;
     private Button testLightButton;
+    private Button enableButton;
 
     private TextView lengthText;
     private SeekBar lengthPicker;
@@ -176,6 +177,9 @@ public class DeviceControlActivity extends Activity {
         voltageMap.put("2V","2");
         voltageMap.put("1.5V","3");
 
+        enableButton = (Button)findViewById(R.id.enable);
+        enableButton.setOnClickListener(enableButtonClickListener);
+
 
 
         incomingMessage = new String();                                                 //Create new string to hold incoming message data
@@ -189,26 +193,28 @@ public class DeviceControlActivity extends Activity {
             finish();                                                                   //End the activity
         }
 
+        //At the beginning disable all button except Enable
+        disableAll();
 
-        mUIUpdater  = new UIAdapter(new Runnable(){
-            @Override
-            public void run() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(!remoteReady) {
-                            disableAll();
-                            if(mDataMDLP != null) {
-                                mDataMDLP.setValue(new byte[]{(byte)66});                     //Set value of MLDP characteristic to send die roll information
-                                writeCharacteristic(mDataMDLP);
-                            }
-                        }
-                    }
-                });
-            }
-        });
-
-        mUIUpdater.startUpdates();
+//        mUIUpdater  = new UIAdapter(new Runnable(){
+//            @Override
+//            public void run() {
+//                runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        if(!remoteReady) {
+//                            disableAll();
+//                            if(mDataMDLP != null) {
+//                                mDataMDLP.setValue(new byte[]{(byte)66});                     //Set value of MLDP characteristic to send die roll information
+//                                writeCharacteristic(mDataMDLP);
+//                            }
+//                        }
+//                    }
+//                });
+//            }
+//        });
+//
+//        mUIUpdater.startUpdates();
 
     }
 
@@ -222,15 +228,6 @@ public class DeviceControlActivity extends Activity {
             Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");     //Warn that something went wrong
             finish();                                                                   //End the Activity
         }
-
-/*      if (mBluetoothGatt != null) {                                                   //See if there is a previous connection
-            Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
-            if (mBluetoothGatt.connect()) {                                             //Try to reconnect to the previous device
-                Log.w(TAG, "Existing Gatt unable to connect.");                         //Warn that something went wrong
-                finish();                                                               //Attempt failed so end the Activity
-            }
-        }
-*/
         final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(mDeviceAddress); //Get the Bluetooth device by referencing its address
         if (device == null) {                                                           //Check whether a device was returned
             Log.w(TAG, "Device not found.  Unable to connect.");                        //Warn that something went wrong
@@ -288,6 +285,7 @@ public class DeviceControlActivity extends Activity {
                 if(mBluetoothGatt != null) {                                            //If there is a valid GATT connection
                     mBluetoothGatt.disconnect();                                        // then disconnect
                 }
+                disableAll();
                 return true;
             case android.R.id.home:                                                     //Option to go back was chosen
                 onBackPressed();                                                        //Execute functionality of back button
@@ -384,6 +382,21 @@ public class DeviceControlActivity extends Activity {
         }
     };
 
+    private final Button.OnClickListener enableButtonClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    disableAll();
+                    if(mDataMDLP != null) {
+                        mDataMDLP.setValue(new byte[]{(byte)66});                     //Set value of MLDP characteristic to send die roll information
+                        writeCharacteristic(mDataMDLP);
+                    }
+                }
+            });
+        }
+    };
     // ----------------------------------------------------------------------------------------------------------------
     // Listener for the red die text
     private final TextView.OnClickListener redDieTextClickListener = new TextView.OnClickListener() {
