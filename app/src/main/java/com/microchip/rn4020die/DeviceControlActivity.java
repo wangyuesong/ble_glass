@@ -206,26 +206,6 @@ public class DeviceControlActivity extends Activity {
         //At the beginning disable all button except Enable
         disableAll();
 
-//        mUIUpdater  = new UIAdapter(new Runnable(){
-//            @Override
-//            public void run() {
-//                runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        if(!remoteReady) {
-//                            disableAll();
-//                            if(mDataMDLP != null) {
-//                                mDataMDLP.setValue(new byte[]{(byte)66});                     //Set value of MLDP characteristic to send die roll information
-//                                writeCharacteristic(mDataMDLP);
-//                            }
-//                        }
-//                    }
-//                });
-//            }
-//        });
-//
-//        mUIUpdater.startUpdates();
-
     }
 
     // ----------------------------------------------------------------------------------------------------------------
