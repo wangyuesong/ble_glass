@@ -75,7 +75,7 @@ public class DeviceControlActivity extends Activity {
     //Should be this 4D696372-6F63-6869-702D-524E34383730
     private static final String MLDP_PRIVATE_SERVICE = "4d696372-6f63-6869-702d-524e34383730";
     private static final String MLDP_DATA_PRIVATE_CHAR = "bf3fbd80-063f-11e5-9e69-0002a5d5c503";
-//    private static final String MLDP_PRIVATE_SERVICE = "00035b03-58e6-07dd-021a-08123a000300"; //Private service for Microchip MLDP
+    //    private static final String MLDP_PRIVATE_SERVICE = "00035b03-58e6-07dd-021a-08123a000300"; //Private service for Microchip MLDP
 //    private static final String MLDP_DATA_PRIVATE_CHAR = "00035b03-58e6-07dd-021a-08123a000301"; //Characteristic for MLDP Data, properties - notify, write
     private static final String MLDP_CONTROL_PRIVATE_CHAR = "00035b03-58e6-07dd-021a-08123a0003ff"; //Characteristic for MLDP Control, properties - read, write
     //Get this by inspecting the characteric_value on phone
@@ -105,7 +105,10 @@ public class DeviceControlActivity extends Activity {
     private HashMap<String, String> voltageMap;
     private Button sendButton;
     private Button testDarkButton;
+    // Originally false, when clicked changed to true and will execute stop logic when clicked again
+    private boolean testDarkFlag;
     private Button testLightButton;
+    private boolean testLightFlag;
     private Button enableButton;
 
     private TextView lengthText;
@@ -126,7 +129,7 @@ public class DeviceControlActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.die_screen);                                            //Show the screen with the die number and button
 
-        final Intent intent = getIntent();                                              //Get the Intent that launched this activity 
+        final Intent intent = getIntent();                                              //Get the Intent that launched this activity
         mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);                        //Get the BLE device name from the Intent
         mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);                  //Get the BLE device address from the Intent
         mHandler = new Handler();                                                       //Create Handler to delay sending first roll after new connection
@@ -174,8 +177,15 @@ public class DeviceControlActivity extends Activity {
         directionMap.put("Dark->Light","F");
 
         voltageMap.put("2.5V","1");
-        voltageMap.put("2V","2");
-        voltageMap.put("1.5V","3");
+        voltageMap.put("2.26V","2");
+        voltageMap.put("2V","3");
+        voltageMap.put("1.72V","4");
+        voltageMap.put("1.48V","5");
+//        <item>2.5V</item>
+//        <item>2.26V</item>
+//        <item>2V</item>
+//        <item>1.72V</item>
+//        <item>1.48V</item>
 
         enableButton = (Button)findViewById(R.id.enable);
         enableButton.setOnClickListener(enableButtonClickListener);
@@ -183,8 +193,8 @@ public class DeviceControlActivity extends Activity {
 
 
         incomingMessage = new String();                                                 //Create new string to hold incoming message data
-        this.getActionBar().setTitle(mDeviceName);                                      //Set the title of the ActionBar to the name of the BLE device 
-        this.getActionBar().setDisplayHomeAsUpEnabled(true);                            //Make home icon clickable with < symbol on the left 
+        this.getActionBar().setTitle(mDeviceName);                                      //Set the title of the ActionBar to the name of the BLE device
+        this.getActionBar().setDisplayHomeAsUpEnabled(true);                            //Make home icon clickable with < symbol on the left
 
         final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE); //Get the BluetoothManager
         mBluetoothAdapter = bluetoothManager.getAdapter();                              //Get a reference to the BluetoothAdapter (radio)
@@ -224,7 +234,7 @@ public class DeviceControlActivity extends Activity {
     protected void onResume() {
         super.onResume();
 
-        if (mBluetoothAdapter == null || mDeviceAddress == null) {                      //Check that we still have a Bluetooth adappter and device address 
+        if (mBluetoothAdapter == null || mDeviceAddress == null) {                      //Check that we still have a Bluetooth adappter and device address
             Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");     //Warn that something went wrong
             finish();                                                                   //End the Activity
         }
@@ -319,7 +329,7 @@ public class DeviceControlActivity extends Activity {
     }
     private void sendVoltageAndDirection(){
         runOnUiThread(new Runnable() {
-//            @Override
+            //            @Override
             public void run() {
 
                 mDataMDLP.setValue(getByteRepresentation(direction + voltage));                     //Set value of MLDP characteristic to send die roll information
@@ -360,16 +370,16 @@ public class DeviceControlActivity extends Activity {
         if (incomingMessage.length() >= 6 && incomingMessage.contains("=>S") && incomingMessage.contains("\r\n")) { //See if we have the right nessage
             indexStart = incomingMessage.indexOf("=>S");                                //Get the position of the matching characters
             indexEnd = incomingMessage.indexOf("\r\n");                                 //Get the position of the end of frame "\r\n"
-            if (indexEnd - indexStart == 4) {                                           //Check that the packet does not have missing or extra characters 
+            if (indexEnd - indexStart == 4) {                                           //Check that the packet does not have missing or extra characters
                 switchState = incomingMessage.charAt(indexStart + 3);                   //Get the character that represents the switch being pressed
                 if (switchState == '1') {                                               //Is it a "1"
                     updateDieState();                                                   // if so then update the state of the die with a new roll and send over BLE
                 }
             }
-            incomingMessage = incomingMessage.substring(indexEnd + 2);                  //Thow away everything up to and including "\n\r" 
+            incomingMessage = incomingMessage.substring(indexEnd + 2);                  //Thow away everything up to and including "\n\r"
         }
         else if (incomingMessage.contains("\r\n")) {                                    //See if we have an end of frame "\r\n" without a valid message
-            incomingMessage = incomingMessage.substring(incomingMessage.indexOf("\r\n") + 2); //Thow away everything up to and including "\n\r" 
+            incomingMessage = incomingMessage.substring(incomingMessage.indexOf("\r\n") + 2); //Thow away everything up to and including "\n\r"
         }
     }
 
@@ -419,8 +429,18 @@ public class DeviceControlActivity extends Activity {
             runOnUiThread(new Runnable() {
                 public void run() {
                     if(mDataMDLP != null) {
-                        mDataMDLP.setValue(getByteRepresentation("B1"));                     //Set value of MLDP characteristic to send die roll information
-                        writeCharacteristic(mDataMDLP);
+                        if(!testLightFlag) {
+                            mDataMDLP.setValue(getByteRepresentation("B1"));                     //Set value of MLDP characteristic to send die roll information
+                            writeCharacteristic(mDataMDLP);
+                            testLightButton.setText("   Stop   ");
+                            testLightFlag = true;
+                        }
+                        else{
+                            mDataMDLP.setValue(getByteRepresentation("B5"));
+                            writeCharacteristic(mDataMDLP);
+                            testLightButton.setText("Test Light");
+                            testLightFlag = false;
+                        }
                     }//Call method to write the characteristic
                 }
             });
@@ -431,8 +451,18 @@ public class DeviceControlActivity extends Activity {
         @Override
         public void onClick(View v) {
             if(mDataMDLP != null) {
-                mDataMDLP.setValue(getByteRepresentation("B2"));                     //Set value of MLDP characteristic to send die roll information
-                writeCharacteristic(mDataMDLP);
+                if(!testDarkFlag) {
+                    mDataMDLP.setValue(getByteRepresentation("B2"));                     //Set value of MLDP characteristic to send die roll information
+                    writeCharacteristic(mDataMDLP);
+                    testDarkButton.setText("   Stop   ");
+                    testDarkFlag = true;
+                }
+                else{
+                    mDataMDLP.setValue(getByteRepresentation("B5"));                     //Set value of MLDP characteristic to send die roll information
+                    writeCharacteristic(mDataMDLP);
+                    testDarkButton.setText("Test Dark");
+                    testDarkFlag = false;
+                }
             }//Call method to write the characteristic
         }
     };
@@ -581,8 +611,8 @@ public class DeviceControlActivity extends Activity {
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) { //A request to Read has completed
             if (status == BluetoothGatt.GATT_SUCCESS) {                                 //See if the read was successful
-            String dataValue = characteristic.getStringValue(0);                        //Get the value of the characteristic
-            processIncomingPacket(dataValue);                                           //Process the data that was received
+                String dataValue = characteristic.getStringValue(0);                        //Get the value of the characteristic
+                processIncomingPacket(dataValue);                                           //Process the data that was received
             }
         }
 

@@ -59,7 +59,9 @@
     </string-array>
     <string-array name="voltage_array">
         <item>2.5V</item>
+        <item>2.26V</item>
         <item>2V</item>
-        <item>1.5V</item>
+        <item>1.72V</item>
+        <item>1.48V</item>
     </string-array>
 </resources>
