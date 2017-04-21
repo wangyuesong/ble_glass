@@ -54,14 +54,14 @@
     <string name="menu_scan">Scan</string>
     <string name="menu_stop">Stop</string>
     <string-array name="direction_array">
-        <item>Light->Dark</item>
-        <item>Dark->Light</item>
+        <item>Dark</item>
+        <item>Light</item>
     </string-array>
     <string-array name="voltage_array">
-        <item>2.5V</item>
-        <item>2.26V</item>
+        <item>3V</item>
+        <item>2.7V</item>
+        <item>2.42V</item>
         <item>2V</item>
-        <item>1.72V</item>
-        <item>1.48V</item>
+        <item>1.7V</item>
     </string-array>
 </resources>

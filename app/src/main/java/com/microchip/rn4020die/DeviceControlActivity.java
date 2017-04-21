@@ -88,7 +88,7 @@ public class DeviceControlActivity extends Activity {
     private Handler mHandler;                                                           //Handler used to send die roll after a time delay
 
     private TextView mConnectionState, redDieText;                                      //TextViews to show connection state and die roll number on the display
-    private Button redDieButton;                                                        //Button to initiate a roll of the die
+//    private Button redDieButton;                                                        //Button to initiate a roll of the die
 
     private String mDeviceName, mDeviceAddress;                                         //Strings for the Bluetooth device name and MAC address
     private String incomingMessage;                                                     //String to hold the incoming message from the MLDP characteristic
@@ -103,7 +103,6 @@ public class DeviceControlActivity extends Activity {
 
     private Spinner voltageSpinner;
     private HashMap<String, String> voltageMap;
-    private Button sendButton;
     private Button testDarkButton;
     // Originally false, when clicked changed to true and will execute stop logic when clicked again
     private boolean testDarkFlag;
@@ -111,14 +110,13 @@ public class DeviceControlActivity extends Activity {
     private boolean testLightFlag;
     private Button enableButton;
 
-    private TextView lengthText;
-    private SeekBar lengthPicker;
 
 
     private String direction;
-    UIAdapter mUIUpdater;
+//    UIAdapter mUIUpdater;
     private String voltage;
-    private int length = 1;
+//    private int length = 1;
+    private int length = 6;
     boolean remoteReady = false;
     // -------------------------------
     // ---------------------------------------------------------------------------------
@@ -137,14 +135,8 @@ public class DeviceControlActivity extends Activity {
         ((TextView) findViewById(R.id.deviceAddress)).setText(mDeviceAddress);          //Display device address on the screen
         mConnectionState = (TextView) findViewById(R.id.connectionState);               //TextView that will display the connection state
 
-        redDie = new Die();                                                             //Create a new Die
-//        redDieText = (TextView) findViewById(R.id.textRedDie);                          //TextView that will display the roll of the die
-//        redDieText.setLayerType(View.LAYER_TYPE_SOFTWARE, null);                        //Hardware acceleration does not have cache large enough for huge fonts
-//        redDieText.setOnClickListener(redDieTextClickListener);                         //Set onClickListener for when text is pressed
-//        redDieButton = (Button) findViewById(R.id.buttonRedDie);                        //Button that will roll the die when clicked
-//        redDieButton.setOnClickListener(redDieButtonClickListener);                     //Set onClickListener for when button is pressed
-        sendButton = (Button)findViewById(R.id.send_button);
-        sendButton.setOnClickListener(sendButtonClickListener);
+        redDie = new Die();
+
         testDarkButton = (Button)findViewById(R.id.test_dark);
         testDarkButton.setOnClickListener(testDarkButtonClickListener);
         testLightButton = (Button)findViewById(R.id.test_light);
@@ -163,30 +155,23 @@ public class DeviceControlActivity extends Activity {
         voltageSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         voltageSpinner.setAdapter(voltageSpinnerAdapter);
         voltageSpinner.setOnItemSelectedListener(voltageSpinnerOnClickListener);
-
-        lengthPicker = (SeekBar) findViewById(R.id.length_picker);
-        lengthPicker.setOnSeekBarChangeListener(lengthPickerOnValueChangedListener);
-        lengthPicker.setMax(15);
-        lengthPicker.setProgress(8);
-        lengthText = (TextView)findViewById(R.id.length_text);
-        lengthText.setText("Length:" + length + " second");
-
-        directionMap = new HashMap<String, String>();
-        voltageMap = new HashMap<String, String>();
-        directionMap.put("Light->Dark","C");
-        directionMap.put("Dark->Light","F");
-
-        voltageMap.put("2.5V","1");
-        voltageMap.put("2.26V","2");
-        voltageMap.put("2V","3");
-        voltageMap.put("1.72V","4");
-        voltageMap.put("1.48V","5");
-//        <item>2.5V</item>
-//        <item>2.26V</item>
-//        <item>2V</item>
-//        <item>1.72V</item>
-//        <item>1.48V</item>
-
+        directionMap = new HashMap<String, String>(){
+            {
+//                put("Light->Dark","C");
+//                put("Dark->Light","F");
+                put("Dark","C");
+                put("Light","F");
+            }
+        };
+        voltageMap = new HashMap<String, String>(){
+            {
+                put("3V","1");
+                put("2.7V","2");
+                put("2.42V","3");
+                put("2V","4");
+                put("1.7V","5");
+            }
+        };
         enableButton = (Button)findViewById(R.id.enable);
         enableButton.setOnClickListener(enableButtonClickListener);
 
@@ -412,13 +397,13 @@ public class DeviceControlActivity extends Activity {
                         if(!testLightFlag) {
                             mDataMDLP.setValue(getByteRepresentation("B1"));                     //Set value of MLDP characteristic to send die roll information
                             writeCharacteristic(mDataMDLP);
-                            testLightButton.setText("   Stop   ");
+                            testLightButton.setText("Stop");
                             testLightFlag = true;
                         }
                         else{
                             mDataMDLP.setValue(getByteRepresentation("B5"));
                             writeCharacteristic(mDataMDLP);
-                            testLightButton.setText("Test Light");
+                            testLightButton.setText("Light");
                             testLightFlag = false;
                         }
                     }//Call method to write the characteristic
@@ -434,13 +419,13 @@ public class DeviceControlActivity extends Activity {
                 if(!testDarkFlag) {
                     mDataMDLP.setValue(getByteRepresentation("B2"));                     //Set value of MLDP characteristic to send die roll information
                     writeCharacteristic(mDataMDLP);
-                    testDarkButton.setText("   Stop   ");
+                    testDarkButton.setText("Stop");
                     testDarkFlag = true;
                 }
                 else{
                     mDataMDLP.setValue(getByteRepresentation("B5"));                     //Set value of MLDP characteristic to send die roll information
                     writeCharacteristic(mDataMDLP);
-                    testDarkButton.setText("Test Dark");
+                    testDarkButton.setText("Dark");
                     testDarkFlag = false;
                 }
             }//Call method to write the characteristic
@@ -455,7 +440,7 @@ public class DeviceControlActivity extends Activity {
         public void onStartTrackingTouch(SeekBar seekBar) {
         }
         public void onStopTrackingTouch(SeekBar seekBar) {
-            lengthText.setText("Length:" + length + " second");
+//            lengthText.setText("Length:" + length + " second");
             Toast.makeText(DeviceControlActivity.this,"Set length to : "+ length + " second",
                     Toast.LENGTH_SHORT).show();
         }
@@ -670,21 +655,21 @@ public class DeviceControlActivity extends Activity {
     }
 
     private void disableAll(){
-        sendButton.setEnabled(false);
+//        sendButton.setEnabled(false);
         testLightButton.setEnabled(false);
         testDarkButton.setEnabled(false);
         voltageSpinner.setEnabled(false);
         directionSpinner.setEnabled(false);
-        lengthPicker.setEnabled(false);
+//        lengthPicker.setEnabled(false);
     }
 
     private void enableAll(){
-        sendButton.setEnabled(true);
+//        sendButton.setEnabled(true);
         testLightButton.setEnabled(true);
         testDarkButton.setEnabled(true);
         voltageSpinner.setEnabled(true);
         directionSpinner.setEnabled(true);
-        lengthPicker.setEnabled(true);
+//        lengthPicker.setEnabled(true);
     }
 
 }
