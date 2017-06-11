@@ -58,10 +58,10 @@
         <item>Light</item>
     </string-array>
     <string-array name="voltage_array">
-        <item>3V</item>
-        <item>2.7V</item>
-        <item>2.42V</item>
-        <item>2V</item>
-        <item>1.7V</item>
+        <item>2.0V</item>
+        <item>1.75V</item>
+        <item>1.5V</item>
+        <item>1.0V</item>
+        <item>0.5V</item>
     </string-array>
 </resources>

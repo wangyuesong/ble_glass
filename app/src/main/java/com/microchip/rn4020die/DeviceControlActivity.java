@@ -165,11 +165,11 @@ public class DeviceControlActivity extends Activity {
         };
         voltageMap = new HashMap<String, String>(){
             {
-                put("3V","1");
-                put("2.7V","2");
-                put("2.42V","3");
-                put("2V","4");
-                put("1.7V","5");
+                put("2.0V","1");
+                put("1.75V","2");
+                put("1.5V","3");
+                put("1.0V","4");
+                put("0.5V","5");
             }
         };
         enableButton = (Button)findViewById(R.id.enable);
